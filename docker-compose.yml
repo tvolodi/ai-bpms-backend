@@ -27,10 +27,8 @@ services:
       - "8222:8222"  # HTTP monitoring
       - "6222:6222"  # Routing port for clustering
     command:
-      - "--cluster_name=bpms-cluster"
       - "--http_port=8222"
       - "--port=4222"
-      - "--routes=nats://0.0.0.0:6222"
       - "--jetstream"
       - "--store_dir=/data"
     volumes:
@@ -65,11 +63,11 @@ services:
       KC_DB_PASSWORD: bpms_pass
       KC_HOSTNAME: localhost
       KC_HOSTNAME_PORT: 8080
-      KC_HOSTNAME_STRICT: false
-      KC_HOSTNAME_STRICT_HTTPS: false
-      KC_HTTP_ENABLED: true
-      KC_HEALTH_ENABLED: true
-      KC_METRICS_ENABLED: true
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
     ports:
       - "8080:8080"
     depends_on:
@@ -108,7 +106,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_USERS_ALLOW_SIGN_UP: false
+      GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./deployment/docker/grafana/provisioning:/etc/grafana/provisioning
