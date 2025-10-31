@@ -70,14 +70,14 @@ setup:
 # Build the application
 build:
 	@echo Building $(BINARY_NAME)...
-	@if not exist bin mkdir bin
+	@mkdir -p bin
 	@$(GOBUILD) -o $(BINARY_PATH) $(MAIN_PATH)
 	@echo Build complete: $(BINARY_PATH)
 
 # Build migration tool
 build-migrate:
 	@echo Building migration tool...
-	@if not exist bin mkdir bin
+	@mkdir -p bin
 	@$(GOBUILD) -o ./bin/migrate $(MIGRATE_PATH)
 	@echo Migration tool built: ./bin/migrate
 
@@ -141,9 +141,9 @@ migrate-rollback: build-migrate
 # Start development environment
 dev:
 	@echo Starting development environment...
-	docker-compose up -d
+	sudo docker-compose up -d
 	@echo Waiting for services to start...
-	@ping -n 11 127.0.0.1 > nul 2>&1 || sleep 10 2>/dev/null || echo Waiting...
+	@sleep 10
 	@echo Running migrations...
 	@$(MAKE) migrate
 	@echo Starting application...
@@ -158,24 +158,24 @@ swagger:
 # Build Docker image
 docker-build:
 	@echo "$(GREEN)Building Docker image...$(NC)"
-	@docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
+	@sudo docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
 	@echo "$(GREEN)Docker image built: $(DOCKER_IMAGE):$(DOCKER_TAG)$(NC)"
 
 # Run Docker container
 docker-run: docker-build
 	@echo "$(GREEN)Running Docker container...$(NC)"
-	@docker run -p 8081:8081 --env-file .env $(DOCKER_IMAGE):$(DOCKER_TAG)
+	@sudo docker run -p 8081:8081 --env-file .env $(DOCKER_IMAGE):$(DOCKER_TAG)
 
 # Start services with docker-compose
 docker-compose-up:
 	@echo "$(GREEN)Starting services with docker-compose...$(NC)"
-	@docker-compose up -d
+	@sudo docker-compose up -d
 	@echo "$(GREEN)Services started. Check with: docker-compose ps$(NC)"
 
 # Stop docker-compose services
 docker-compose-down:
 	@echo "$(YELLOW)Stopping docker-compose services...$(NC)"
-	@docker-compose down
+	@sudo docker-compose down
 	@echo "$(GREEN)Services stopped$(NC)"
 
 # Development watch mode (requires air)
@@ -198,12 +198,12 @@ db-reset: docker-compose-down docker-compose-up
 health-check:
 	@echo Checking services health...
 	@powershell -Command "try { Invoke-WebRequest -Uri http://localhost:8081/health -UseBasicParsing | Out-Null; Write-Host 'API service is healthy' } catch { Write-Host 'API service is down' -ForegroundColor Red }" 2>nul || curl -f http://localhost:8081/health 2>/dev/null || echo API service check failed
-	@docker-compose ps
+	@sudo docker-compose ps
 
 # Show logs
 logs:
 	@echo "$(GREEN)Showing application logs...$(NC)"
-	@docker-compose logs -f
+	@sudo docker-compose logs -f
 
 # Production build
 build-prod:
