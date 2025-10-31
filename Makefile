@@ -70,14 +70,14 @@ setup:
 # Build the application
 build:
 	@echo Building $(BINARY_NAME)...
-	@mkdir -p bin
+	@if not exist bin mkdir bin
 	@$(GOBUILD) -o $(BINARY_PATH) $(MAIN_PATH)
 	@echo Build complete: $(BINARY_PATH)
 
 # Build migration tool
 build-migrate:
 	@echo Building migration tool...
-	@mkdir -p bin
+	@if not exist bin mkdir bin
 	@$(GOBUILD) -o ./bin/migrate $(MIGRATE_PATH)
 	@echo Migration tool built: ./bin/migrate
 
@@ -143,7 +143,7 @@ dev:
 	@echo Starting development environment...
 	sudo docker-compose up -d
 	@echo Waiting for services to start...
-	@sleep 10
+	@ping -n 11 127.0.0.1 > nul 2>&1 || sleep 10 2>/dev/null || echo Waiting...
 	@echo Running migrations...
 	@$(MAKE) migrate
 	@echo Starting application...
