@@ -1,0 +1,105 @@
+server:
+  host: "localhost"
+  port: 8081
+  read_timeout: "30s"
+  write_timeout: "30s"
+  idle_timeout: "60s"
+  tls:
+    enabled: false
+    cert_file: ""
+    key_file: ""
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "bpms_user"
+  password: "bpms_pass"
+  dbname: "ai_bpms"
+  sslmode: "disable"
+  max_open_conns: 25
+  max_idle_conns: 10
+  max_lifetime: "5m"
+
+auth:
+  provider: "jwt"  # jwt, keycloak, auth0
+  jwt:
+    secret: "your-256-bit-secret-change-in-production"
+    access_token_duration: "15m"
+    refresh_token_duration: "168h"  # 7 days
+    issuer: "ai-bpms"
+    audience: "ai-bpms-users"
+  
+  keycloak:
+    base_url: "http://localhost:8080"
+    realm: "ai-bpms"
+    client_id: "ai-bpms-backend"
+    client_secret: "your-client-secret"
+  
+  oidc:
+    provider: "auth0"  # auth0, google, microsoft
+    client_id: "your-oidc-client-id"
+    client_secret: "your-oidc-client-secret"
+    domain: "your-domain.auth0.com"
+    audience: "https://api.ai-bpms.com"
+  
+  built_in:
+    enabled: true
+    require_otp: false
+    passwordless_only: false
+  
+  security:
+    require_mfa: false
+    session_timeout: "4h"
+    max_concurrent_sessions: 3
+    ip_allowlist: []
+
+nats:
+  url: "nats://localhost:4222"
+  cluster_id: "bpms-cluster"
+  client_id: "bpms-client"
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 10
+
+ai:
+  openai:
+    api_key: "your-openai-api-key"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4"
+  custom:
+    endpoint: "http://localhost:5000"
+    api_key: "your-custom-ai-key"
+
+logging:
+  level: "info"  # debug, info, warn, error
+  format: "json"  # json, text
+  output: "stdout"  # stdout, file
+  file: "logs/app.log"
+
+cache:
+  ttl: "1h"
+  cleanup_interval: "10m"
+  max_size: 1000
+  strategy: "lru"  # lru, lfu
+
+security:
+  rate_limit:
+    enabled: true
+    rps: 100
+    burst: 200
+  cors:
+    allowed_origins: ["*"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["*"]
+  encryption:
+    key: "your-32-byte-encryption-key-here"
+    algorithm: "AES-256-GCM"
+
+metrics:
+  enabled: true
+  path: "/metrics"
+  port: 9090

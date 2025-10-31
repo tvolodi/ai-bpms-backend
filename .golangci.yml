@@ -1,0 +1,87 @@
+# Golang linter configuration
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
+  skip-dirs:
+    - vendor
+    - docs
+    - deployment
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  
+  gocyclo:
+    min-complexity: 10
+  
+  gofmt:
+    simplify: true
+  
+  goimports:
+    local-prefixes: github.com/tvolodi/ai-bpms-backend
+  
+  golint:
+    min-confidence: 0.8
+  
+  govet:
+    check-shadowing: true
+  
+  misspell:
+    locale: US
+  
+  unparam:
+    check-exported: false
+
+linters:
+  enable:
+    - errcheck      # Check for unchecked errors
+    - gosimple      # Suggest code simplifications
+    - govet         # Go vet
+    - ineffassign   # Detect ineffectual assignments
+    - staticcheck   # Static analysis
+    - typecheck     # Type checking
+    - unused        # Check for unused constants, variables, functions and types
+    - gofmt         # Check if code is gofmt-ed
+    - goimports     # Check if imports are sorted
+    - misspell      # Check for misspelled English words
+    - gocyclo       # Check cyclomatic complexity
+    - gosec         # Security issues
+    - unconvert     # Unnecessary type conversions
+    - dupl          # Code cloning detection
+    - goconst       # Repeated strings that could be constants
+    - gocognit      # Cognitive complexity
+  
+  disable:
+    - maligned      # Disabled because it's archaic
+    - interfacer    # Disabled because it's archaic
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+    
+    # Exclude specific issues
+    - text: "weak cryptographic primitive"
+      linters:
+        - gosec
+    
+    - text: "G404:"  # Random number generation
+      linters:
+        - gosec
+
+  max-issues-per-linter: 0
+  max-same-issues: 0

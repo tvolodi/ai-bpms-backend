@@ -1,0 +1,84 @@
+server:
+  host: "0.0.0.0"
+  port: 8081
+  tls:
+    enabled: true
+    cert_file: "/etc/ssl/certs/server.crt"
+    key_file: "/etc/ssl/private/server.key"
+
+database:
+  host: "postgres-production"
+  port: 5432
+  user: "bpms_prod_user"
+  password: "${BPMS_DB_PASSWORD}"
+  dbname: "ai_bpms_prod"
+  sslmode: "require"
+  max_open_conns: 50
+  max_idle_conns: 25
+  max_lifetime: "30m"
+
+auth:
+  provider: "keycloak"  # Use Keycloak in production
+  jwt:
+    secret: "${BPMS_JWT_SECRET}"
+    access_token_duration: "15m"
+    refresh_token_duration: "24h"  # Shorter in production
+  
+  keycloak:
+    base_url: "${BPMS_KEYCLOAK_URL}"
+    realm: "ai-bpms"
+    client_id: "ai-bpms-backend"
+    client_secret: "${BPMS_KEYCLOAK_SECRET}"
+  
+  security:
+    require_mfa: true
+    session_timeout: "2h"
+    max_concurrent_sessions: 2
+    ip_allowlist: []
+
+nats:
+  url: "nats://nats-cluster:4222"
+  cluster_id: "bpms-prod-cluster"
+  client_id: "${HOSTNAME}-client"
+
+redis:
+  host: "redis-cluster"
+  port: 6379
+  password: "${BPMS_REDIS_PASSWORD}"
+  db: 0
+  pool_size: 20
+
+ai:
+  openai:
+    api_key: "${BPMS_OPENAI_KEY}"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4"
+
+logging:
+  level: "warn"
+  format: "json"
+  output: "stdout"
+
+cache:
+  ttl: "30m"
+  cleanup_interval: "5m"
+  max_size: 10000
+  strategy: "lru"
+
+security:
+  rate_limit:
+    enabled: true
+    rps: 50
+    burst: 100
+  cors:
+    allowed_origins: ["https://app.ai-bpms.com", "https://admin.ai-bpms.com"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE"]
+    allowed_headers: ["Authorization", "Content-Type"]
+  encryption:
+    key: "${BPMS_ENCRYPTION_KEY}"
+    algorithm: "AES-256-GCM"
+
+metrics:
+  enabled: true
+  path: "/metrics"
+  port: 9090

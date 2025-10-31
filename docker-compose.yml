@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai-bpms-postgres
+    environment:
+      POSTGRES_DB: ai_bpms
+      POSTGRES_USER: bpms_user
+      POSTGRES_PASSWORD: bpms_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deployment/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ai-bpms-network
+    restart: unless-stopped
+
+  # NATS messaging system
+  nats:
+    image: nats:2.10-alpine
+    container_name: ai-bpms-nats
+    ports:
+      - "4222:4222"  # Client connections
+      - "8222:8222"  # HTTP monitoring
+      - "6222:6222"  # Routing port for clustering
+    command:
+      - "--cluster_name=bpms-cluster"
+      - "--http_port=8222"
+      - "--port=4222"
+      - "--routes=nats://0.0.0.0:6222"
+      - "--jetstream"
+      - "--store_dir=/data"
+    volumes:
+      - nats_data:/data
+    networks:
+      - ai-bpms-network
+    restart: unless-stopped
+
+  # Redis for distributed caching
+  redis:
+    image: redis:7-alpine
+    container_name: ai-bpms-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai-bpms-network
+    restart: unless-stopped
+
+  # Keycloak for authentication (optional for development)
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0
+    container_name: ai-bpms-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: bpms_user
+      KC_DB_PASSWORD: bpms_pass
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - ai-bpms-network
+    restart: unless-stopped
+    command: start-dev
+
+  # Prometheus for monitoring (optional for development)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ai-bpms-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deployment/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - ai-bpms-network
+    restart: unless-stopped
+
+  # Grafana for monitoring dashboards (optional for development)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ai-bpms-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./deployment/docker/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - ai-bpms-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  nats_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  ai-bpms-network:
+    driver: bridge
